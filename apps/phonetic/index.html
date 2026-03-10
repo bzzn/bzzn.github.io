@@ -13,6 +13,7 @@
             --text: #2e3436;
             --success: #4e9a06;
             --error: #cc0000;
+            --disabled: #babdb6;
         }
 
         body {
@@ -51,15 +52,31 @@
             color: var(--primary);
         }
 
-        .question-box-header {
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 10px;
+        .language-selector {
+            margin-bottom: 1.5rem;
         }
 
-        .question-box {
-            background-color: var(--primary);
+        .language-selector label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .language-selector select {
+            width: 50%;
+            padding: 10px;
+            font-size: 1rem;
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .language-selector select:focus {
+            border-color: var(--primary);
+        }
+
+        .letter-box {
             padding: 2rem;
             border-radius: 0.5rem;
             margin-bottom: 1.5rem;
@@ -68,7 +85,7 @@
         .letter-display {
             font-size: 4rem;
             font-weight: bold;
-            color: var(--bg);
+            color: var(--primary);
             line-height: 1;
         }
 
@@ -100,8 +117,6 @@
             border-radius: 8px;
             cursor: pointer;
             transition: background-color 0.2s;
-            width: 100%;
-            max-width: 200px;
         }
 
         button:hover {
@@ -109,7 +124,7 @@
         }
 
         button:disabled {
-            background-color: #cbd5e1;
+            background-color: var(--disabled);
             cursor: not-allowed;
         }
 
@@ -130,7 +145,6 @@
 
         .hidden { display: none; }
 
-        /* End Screen Styles */
         .result-score {
             font-size: 3rem;
             font-weight: bold;
@@ -140,206 +154,274 @@
     </style>
 </head>
 <body>
-
-<div class="container">
-    <!-- Start Screen -->
-    <div id="start-screen">
-        <h1>Phonetic Alphabet Quiz</h1>
-        <p>Test your knowledge of the NATO phonetic alphabet.</p>
-        <p><em>Example: A = Alpha, B = Bravo...</em></p>
-        <button onclick="startGame()">Start Quiz</button>
-    </div>
-
-    <!-- Game Screen -->
-    <div id="game-screen" class="hidden">
-        <div class="stats">
-            <span id="score-display">Score: 0</span>
-            <span id="progress-display">Progress: 1/26</span>
+    <div class="container">
+        <div id="start-screen">
+            <h1>Phonetic Alphabet Quiz</h1>
+            <p>Test your knowledge of phonetic alphabets from around the world.</p>
+            <div class="language-selector">
+                <label for="language-select">Select Language:</label>
+                <select id="language-select">
+                    <option value="nato">NATO (English)</option>
+                    <option value="swedish">Svenska</option>
+                    <option value="fake">Fake (for testing)</option>
+                </select>
+            </div>
+            <button onclick="startGame()">Start quiz</button>
         </div>
 
-        <div class="question-box">
-            <!--<div class="question-box-header">What is the phonetic word for?</div>-->
-            <div class="letter-display" id="current-letter">A</div>
+        <div id="game-screen" class="hidden">
+            <div class="stats">
+                <span id="score-display">Score: -</span>
+                <span id="current-language-display">-</span>
+                <span id="progress-display">-/-</span>
+            </div>
+
+            <div class="letter-box">
+                <div class="letter-display" id="current-display">A</div>
+            </div>
+
+            <div class="input-group">
+                <input type="text" id="answer-input" placeholder="Type answer here..." autocomplete="off">
+            </div>
+
+            <button id="submit-button" onclick="checkAnswer()">Check</button>
+
+            <div id="feedback-display" class="feedback"></div>
         </div>
 
-        <div class="input-group">
-            <input type="text" id="answer-input" placeholder="Type answer here..." autocomplete="off">
+        <div id="end-screen" class="hidden">
+            <h1>Quiz Complete!</h1>
+            <p>Your final score is:</p>
+            <div class="result-score" id="final-score">-/-</div>
+            <p id="final-message"></p>
+            <button onclick="startGame()">Again!</button>
+            <button onclick="resetGame()">Reset</button>
         </div>
-
-        <button id="submit-btn" onclick="checkAnswer()">Check</button>
-
-        <div id="feedback-msg" class="feedback"></div>
     </div>
 
-    <!-- End Screen -->
-    <div id="end-screen" class="hidden">
-        <h1>Quiz Complete!</h1>
-        <p>Your final score is:</p>
-        <div class="result-score" id="final-score">0/26</div>
-        <p id="final-message"></p>
-        <button onclick="startGame()">Play Again</button>
-    </div>
-</div>
+    <script>
+        const phoneticAlphabets = {
+            nato: [
+                { letter: 'A', word: 'Alpha' },
+                { letter: 'B', word: 'Bravo' },
+                { letter: 'C', word: 'Charlie' },
+                { letter: 'D', word: 'Delta' },
+                { letter: 'E', word: 'Echo' },
+                { letter: 'F', word: 'Foxtrot' },
+                { letter: 'G', word: 'Golf' },
+                { letter: 'H', word: 'Hotel' },
+                { letter: 'I', word: 'India' },
+                { letter: 'J', word: 'Juliett' },
+                { letter: 'K', word: 'Kilo' },
+                { letter: 'L', word: 'Lima' },
+                { letter: 'M', word: 'Mike' },
+                { letter: 'N', word: 'November' },
+                { letter: 'O', word: 'Oscar' },
+                { letter: 'P', word: 'Papa' },
+                { letter: 'Q', word: 'Quebec' },
+                { letter: 'R', word: 'Romeo' },
+                { letter: 'S', word: 'Sierra' },
+                { letter: 'T', word: 'Tango' },
+                { letter: 'U', word: 'Uniform' },
+                { letter: 'V', word: 'Victor' },
+                { letter: 'W', word: 'Whiskey' },
+                { letter: 'X', word: 'X-ray' },
+                { letter: 'Y', word: 'Yankee' },
+                { letter: 'Z', word: 'Zulu' }
+            ],
+            swedish: [
+                { letter: 'A', word: 'Adam' },
+                { letter: 'B', word: 'Bertil' },
+                { letter: 'C', word: 'Cesar' },
+                { letter: 'D', word: 'David' },
+                { letter: 'E', word: 'Erik' },
+                { letter: 'F', word: 'Filip' },
+                { letter: 'G', word: 'Gustav' },
+                { letter: 'H', word: 'Helge' },
+                { letter: 'I', word: 'Ivar' },
+                { letter: 'J', word: 'Johan' },
+                { letter: 'K', word: 'Kalle' },
+                { letter: 'L', word: 'Ludvig' },
+                { letter: 'M', word: 'Martin' },
+                { letter: 'N', word: 'Niklas' },
+                { letter: 'O', word: 'Olof' },
+                { letter: 'P', word: 'Petter' },
+                { letter: 'Q', word: 'Qvintus' },
+                { letter: 'R', word: 'Rudolf' },
+                { letter: 'S', word: 'Sigurd' },
+                { letter: 'T', word: 'Tore' },
+                { letter: 'U', word: 'Urban' },
+                { letter: 'V', word: 'Viktor' },
+                { letter: 'W', word: 'Wilhelm' },
+                { letter: 'X', word: 'Xerxes' },
+                { letter: 'Y', word: 'Yngve' },
+                { letter: 'Z', word: 'Zäta' },
+                { letter: 'Å', word: 'Åke' },
+                { letter: 'Ä', word: 'Ärlig' },
+                { letter: 'Ö', word: 'Östen' },
+            ],
+            fake: [
+                { letter: 'A', word: 'A' },
+                { letter: 'B', word: 'B' },
+                { letter: 'C', word: 'C' },
+            ]
+        };
 
-<script>
-    // The NATO Phonetic Alphabet Data
-    const phoneticAlphabet = [
-        { letter: 'A', word: 'Alpha' },
-        { letter: 'B', word: 'Bravo' },
-        { letter: 'C', word: 'Charlie' },
-        { letter: 'D', word: 'Delta' },
-        { letter: 'E', word: 'Echo' },
-        { letter: 'F', word: 'Foxtrot' },
-        { letter: 'G', word: 'Golf' },
-        { letter: 'H', word: 'Hotel' },
-        { letter: 'I', word: 'India' },
-        { letter: 'J', word: 'Juliett' },
-        { letter: 'K', word: 'Kilo' },
-        { letter: 'L', word: 'Lima' },
-        { letter: 'M', word: 'Mike' },
-        { letter: 'N', word: 'November' },
-        { letter: 'O', word: 'Oscar' },
-        { letter: 'P', word: 'Papa' },
-        { letter: 'Q', word: 'Quebec' },
-        { letter: 'R', word: 'Romeo' },
-        { letter: 'S', word: 'Sierra' },
-        { letter: 'T', word: 'Tango' },
-        { letter: 'U', word: 'Uniform' },
-        { letter: 'V', word: 'Victor' },
-        { letter: 'W', word: 'Whiskey' },
-        { letter: 'X', word: 'X-ray' },
-        { letter: 'Y', word: 'Yankee' },
-        { letter: 'Z', word: 'Zulu' }
-    ];
+        const languageNames = {
+            nato: 'NATO (English)',
+            swedish: 'Svenska',
+            fake: 'Fake (for testing)'
+        };
 
-    let currentQuestions = [];
-    let currentIndex = 0;
-    let score = 0;
-    let isProcessing = false;
+        let currentAlphabet = [];
+        let currentIndex = 0;
+        let score = 0;
+        let isProcessing = false;
 
-    // DOM Elements
-    const startScreen = document.getElementById('start-screen');
-    const gameScreen = document.getElementById('game-screen');
-    const endScreen = document.getElementById('end-screen');
-    const letterDisplay = document.getElementById('current-letter');
-    const inputField = document.getElementById('answer-input');
-    const scoreDisplay = document.getElementById('score-display');
-    const progressDisplay = document.getElementById('progress-display');
-    const feedbackMsg = document.getElementById('feedback-msg');
-    const submitBtn = document.getElementById('submit-btn');
+        const startScreen = document.getElementById('start-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const endScreen = document.getElementById('end-screen');
+        const letterDisplay = document.getElementById('current-display');
+        const inputField = document.getElementById('answer-input');
+        const scoreDisplay = document.getElementById('score-display');
+        const progressDisplay = document.getElementById('progress-display');
+        const feedbackDisplay = document.getElementById('feedback-display');
+        const submitButton = document.getElementById('submit-button');
+        const languageSelect = document.getElementById('language-select');
+        const currentLanguageDisplay = document.getElementById('current-language-display');
 
-    function shuffleArray(array) {
-        for (let i = array.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [array[i], array[j]] = [array[j], array[i]];
-        }
-        return array;
-    }
-
-    function startGame() {
-        // Reset state
-        score = 0;
-        currentIndex = 0;
-        // Create a copy and shuffle the questions
-        currentQuestions = shuffleArray([...phoneticAlphabet]);
-
-        // UI Updates
-        startScreen.classList.add('hidden');
-        endScreen.classList.add('hidden');
-        gameScreen.classList.remove('hidden');
-
-        loadQuestion();
-    }
-
-    function loadQuestion() {
-        if (currentIndex >= currentQuestions.length) {
-            endGame();
-            return;
-        }
-
-        const currentQ = currentQuestions[currentIndex];
-        letterDisplay.textContent = currentQ.letter;
-        inputField.value = '';
-        inputField.disabled = false;
-        inputField.focus();
-        submitBtn.disabled = false;
-
-        // Reset feedback
-        feedbackMsg.className = 'feedback';
-        feedbackMsg.textContent = '';
-
-        // Update stats
-        scoreDisplay.textContent = `Score: ${score}`;
-        progressDisplay.textContent = `Question: ${currentIndex + 1}/${currentQuestions.length}`;
-    }
-
-    function checkAnswer() {
-        if (isProcessing) return;
-
-        const userAnswer = inputField.value.trim().toLowerCase();
-        const correctWord = currentQuestions[currentIndex].word.toLowerCase();
-
-        if (!userAnswer) return; // Don't submit empty
-
-        isProcessing = true;
-        inputField.disabled = true;
-        submitBtn.disabled = true;
-
-        // Normalize strings for comparison (remove hyphens like in X-ray)
-        const normalizedUser = userAnswer.replace(/-/g, '');
-        const normalizedCorrect = correctWord.replace(/-/g, '');
-
-        if (normalizedUser === normalizedCorrect) {
-            score++;
-            showFeedback(true, `Correct! It is ${currentQuestions[currentIndex].word}`);
-        } else {
-            showFeedback(false, `Incorrect. The answer was ${currentQuestions[currentIndex].word}`);
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
         }
 
-        scoreDisplay.textContent = `Score: ${score}`;
-
-        // Wait 1.5 seconds then move to next
-        setTimeout(() => {
-            currentIndex++;
-            isProcessing = false;
-            loadQuestion();
-        }, 1500);
-    }
-
-    function showFeedback(isCorrect, message) {
-        feedbackMsg.textContent = message;
-        feedbackMsg.className = `feedback visible ${isCorrect ? 'correct' : 'incorrect'}`;
-    }
-
-    function endGame() {
-        gameScreen.classList.add('hidden');
-        endScreen.classList.remove('hidden');
-
-        const finalScoreEl = document.getElementById('final-score');
-        const finalMsgEl = document.getElementById('final-message');
-
-        finalScoreEl.textContent = `${score}/${currentQuestions.length}`;
-
-        const percentage = (score / currentQuestions.length) * 100;
-        if (percentage === 100) {
-            finalMsgEl.textContent = "Perfect! You are a master of the alphabet.";
-        } else if (percentage >= 80) {
-            finalMsgEl.textContent = "Great job! You know your phonetics well.";
-        } else if (percentage >= 50) {
-            finalMsgEl.textContent = "Not bad, but there's room for improvement.";
-        } else {
-            finalMsgEl.textContent = "Keep practicing! The phonetic alphabet is tricky.";
+        function calcPercentage(x, y, fixed = 2) {
+            const percent = (x / y) * 100;
+            if(!isNaN(percent)) {
+                return Number(percent.toFixed(fixed));
+            } else {
+                return null;
+            }
         }
-    }
 
-    // Allow pressing "Enter" to submit
-    inputField.addEventListener("keypress", function(event) {
-        if (event.key === "Enter") {
-            event.preventDefault();
-            checkAnswer();
+        function showStartScreen() {
+            endScreen.classList.add('hidden');
+            startScreen.classList.remove('hidden');
         }
-    });
-</script>
 
+        function startGame() {
+            selectedLanguage = languageSelect.value;
+
+            score = 0;
+            currentIndex = 0;
+            currentAlphabet = shuffleArray([...phoneticAlphabets[selectedLanguage]]);
+
+            currentLanguageDisplay.textContent = languageNames[selectedLanguage];
+
+            startScreen.classList.add('hidden');
+            endScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+
+            loadAlphabet();
+        }
+
+        function loadAlphabet() {
+            if (currentIndex >= currentAlphabet.length) {
+                endGame();
+                return;
+            }
+
+            letterDisplay.textContent = currentAlphabet[currentIndex].letter;
+            inputField.value = '';
+            inputField.disabled = false;
+            inputField.focus();
+            submitButton.disabled = false;
+
+            feedbackDisplay.className = 'feedback';
+            feedbackDisplay.textContent = '';
+
+            scoreDisplay.textContent = `Score: ${score}`;
+            progressDisplay.textContent = `${currentIndex + 1} of ${currentAlphabet.length}`;
+        }
+
+        function checkAnswer() {
+            if (isProcessing) return;
+
+            const userAnswer = inputField.value.trim().toLowerCase();
+            const correctWord = currentAlphabet[currentIndex].word.toLowerCase();
+
+            if (!userAnswer) return;
+
+            isProcessing = true;
+            inputField.disabled = true;
+            submitButton.disabled = true;
+
+            const normalize = (str) => str
+                .toLowerCase()
+                .replace(/-/g, '')
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, ''); // Remove diacritics
+
+            const normalizedUser = normalize(userAnswer);
+            const normalizedCorrect = normalize(correctWord);
+
+            if (normalizedUser === normalizedCorrect) {
+                score++;
+                showFeedback(true, `Correct! It is ${currentAlphabet[currentIndex].word}`);
+            } else {
+                showFeedback(false, `Incorrect. The answer was ${currentAlphabet[currentIndex].word}`);
+            }
+
+            scoreDisplay.textContent = `Score: ${score}`;
+
+            setTimeout(() => {
+                currentIndex++;
+                isProcessing = false;
+                loadAlphabet();
+            }, 1500);
+        }
+
+        function showFeedback(isCorrect, message) {
+            feedbackDisplay.textContent = message;
+            feedbackDisplay.className = `feedback visible ${isCorrect ? 'correct' : 'incorrect'}`;
+        }
+
+        function endGame() {
+            gameScreen.classList.add('hidden');
+            endScreen.classList.remove('hidden');
+
+            const finalScore = document.getElementById('final-score');
+            const finalMessage = document.getElementById('final-message');
+
+            finalScore.textContent = `${score}/${currentAlphabet.length}`;
+
+            const percentage = calcPercentage(score, currentAlphabet.length, 0);
+            if (percentage === 100) {
+                finalMessage.textContent = "Perfect! You are a master of the alphabet.";
+            } else if (percentage >= 80) {
+                finalMessage.textContent = "Great job! You know your phonetics well.";
+            } else if (percentage >= 50) {
+                finalMessage.textContent = "Not bad, but there's room for improvement.";
+            } else {
+                finalMessage.textContent = "Keep practicing! The phonetic alphabet is tricky.";
+            }
+        }
+
+        function resetGame() {
+            gameScreen.classList.add('hidden');
+            endScreen.classList.add('hidden');
+            startScreen.classList.remove('hidden');
+        }
+
+        inputField.addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                checkAnswer();
+            }
+        });
+    </script>
 </body>
 </html>
