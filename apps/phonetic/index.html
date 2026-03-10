@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phonetic Alphabet Quiz</title>
+    <style>
+        :root {
+            --primary: #3465a4;
+            --primary-hover: #729fcf;
+            --bg: #eeeeec;
+            --card-bg: #ffffff;
+            --text: #2e3436;
+            --success: #4e9a06;
+            --error: #cc0000;
+        }
+
+        body {
+            font-family: system-ui, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        h1 {
+            margin-top: 0;
+            color: var(--primary);
+            font-size: 1.8rem;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .question-box-header {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .question-box {
+            background-color: var(--primary);
+            padding: 2rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .letter-display {
+            font-size: 4rem;
+            font-weight: bold;
+            color: var(--bg);
+            line-height: 1;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        input[type="text"] {
+            width: 80%;
+            padding: 12px;
+            font-size: 1.2rem;
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            text-align: center;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary);
+        }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            width: 100%;
+            max-width: 200px;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        button:disabled {
+            background-color: #cbd5e1;
+            cursor: not-allowed;
+        }
+
+        .feedback {
+            height: 24px;
+            margin-top: 1rem;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .feedback.visible {
+            opacity: 1;
+        }
+
+        .feedback.correct { color: var(--success); }
+        .feedback.incorrect { color: var(--error); }
+
+        .hidden { display: none; }
+
+        /* End Screen Styles */
+        .result-score {
+            font-size: 3rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Start Screen -->
+    <div id="start-screen">
+        <h1>Phonetic Alphabet Quiz</h1>
+        <p>Test your knowledge of the NATO phonetic alphabet.</p>
+        <p><em>Example: A = Alpha, B = Bravo...</em></p>
+        <button onclick="startGame()">Start Quiz</button>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="game-screen" class="hidden">
+        <div class="stats">
+            <span id="score-display">Score: 0</span>
+            <span id="progress-display">Progress: 1/26</span>
+        </div>
+
+        <div class="question-box">
+            <!--<div class="question-box-header">What is the phonetic word for?</div>-->
+            <div class="letter-display" id="current-letter">A</div>
+        </div>
+
+        <div class="input-group">
+            <input type="text" id="answer-input" placeholder="Type answer here..." autocomplete="off">
+        </div>
+
+        <button id="submit-btn" onclick="checkAnswer()">Check</button>
+
+        <div id="feedback-msg" class="feedback"></div>
+    </div>
+
+    <!-- End Screen -->
+    <div id="end-screen" class="hidden">
+        <h1>Quiz Complete!</h1>
+        <p>Your final score is:</p>
+        <div class="result-score" id="final-score">0/26</div>
+        <p id="final-message"></p>
+        <button onclick="startGame()">Play Again</button>
+    </div>
+</div>
+
+<script>
+    // The NATO Phonetic Alphabet Data
+    const phoneticAlphabet = [
+        { letter: 'A', word: 'Alpha' },
+        { letter: 'B', word: 'Bravo' },
+        { letter: 'C', word: 'Charlie' },
+        { letter: 'D', word: 'Delta' },
+        { letter: 'E', word: 'Echo' },
+        { letter: 'F', word: 'Foxtrot' },
+        { letter: 'G', word: 'Golf' },
+        { letter: 'H', word: 'Hotel' },
+        { letter: 'I', word: 'India' },
+        { letter: 'J', word: 'Juliett' },
+        { letter: 'K', word: 'Kilo' },
+        { letter: 'L', word: 'Lima' },
+        { letter: 'M', word: 'Mike' },
+        { letter: 'N', word: 'November' },
+        { letter: 'O', word: 'Oscar' },
+        { letter: 'P', word: 'Papa' },
+        { letter: 'Q', word: 'Quebec' },
+        { letter: 'R', word: 'Romeo' },
+        { letter: 'S', word: 'Sierra' },
+        { letter: 'T', word: 'Tango' },
+        { letter: 'U', word: 'Uniform' },
+        { letter: 'V', word: 'Victor' },
+        { letter: 'W', word: 'Whiskey' },
+        { letter: 'X', word: 'X-ray' },
+        { letter: 'Y', word: 'Yankee' },
+        { letter: 'Z', word: 'Zulu' }
+    ];
+
+    let currentQuestions = [];
+    let currentIndex = 0;
+    let score = 0;
+    let isProcessing = false;
+
+    // DOM Elements
+    const startScreen = document.getElementById('start-screen');
+    const gameScreen = document.getElementById('game-screen');
+    const endScreen = document.getElementById('end-screen');
+    const letterDisplay = document.getElementById('current-letter');
+    const inputField = document.getElementById('answer-input');
+    const scoreDisplay = document.getElementById('score-display');
+    const progressDisplay = document.getElementById('progress-display');
+    const feedbackMsg = document.getElementById('feedback-msg');
+    const submitBtn = document.getElementById('submit-btn');
+
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    function startGame() {
+        // Reset state
+        score = 0;
+        currentIndex = 0;
+        // Create a copy and shuffle the questions
+        currentQuestions = shuffleArray([...phoneticAlphabet]);
+
+        // UI Updates
+        startScreen.classList.add('hidden');
+        endScreen.classList.add('hidden');
+        gameScreen.classList.remove('hidden');
+
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        if (currentIndex >= currentQuestions.length) {
+            endGame();
+            return;
+        }
+
+        const currentQ = currentQuestions[currentIndex];
+        letterDisplay.textContent = currentQ.letter;
+        inputField.value = '';
+        inputField.disabled = false;
+        inputField.focus();
+        submitBtn.disabled = false;
+
+        // Reset feedback
+        feedbackMsg.className = 'feedback';
+        feedbackMsg.textContent = '';
+
+        // Update stats
+        scoreDisplay.textContent = `Score: ${score}`;
+        progressDisplay.textContent = `Question: ${currentIndex + 1}/${currentQuestions.length}`;
+    }
+
+    function checkAnswer() {
+        if (isProcessing) return;
+
+        const userAnswer = inputField.value.trim().toLowerCase();
+        const correctWord = currentQuestions[currentIndex].word.toLowerCase();
+
+        if (!userAnswer) return; // Don't submit empty
+
+        isProcessing = true;
+        inputField.disabled = true;
+        submitBtn.disabled = true;
+
+        // Normalize strings for comparison (remove hyphens like in X-ray)
+        const normalizedUser = userAnswer.replace(/-/g, '');
+        const normalizedCorrect = correctWord.replace(/-/g, '');
+
+        if (normalizedUser === normalizedCorrect) {
+            score++;
+            showFeedback(true, `Correct! It is ${currentQuestions[currentIndex].word}`);
+        } else {
+            showFeedback(false, `Incorrect. The answer was ${currentQuestions[currentIndex].word}`);
+        }
+
+        scoreDisplay.textContent = `Score: ${score}`;
+
+        // Wait 1.5 seconds then move to next
+        setTimeout(() => {
+            currentIndex++;
+            isProcessing = false;
+            loadQuestion();
+        }, 1500);
+    }
+
+    function showFeedback(isCorrect, message) {
+        feedbackMsg.textContent = message;
+        feedbackMsg.className = `feedback visible ${isCorrect ? 'correct' : 'incorrect'}`;
+    }
+
+    function endGame() {
+        gameScreen.classList.add('hidden');
+        endScreen.classList.remove('hidden');
+
+        const finalScoreEl = document.getElementById('final-score');
+        const finalMsgEl = document.getElementById('final-message');
+
+        finalScoreEl.textContent = `${score}/${currentQuestions.length}`;
+
+        const percentage = (score / currentQuestions.length) * 100;
+        if (percentage === 100) {
+            finalMsgEl.textContent = "Perfect! You are a master of the alphabet.";
+        } else if (percentage >= 80) {
+            finalMsgEl.textContent = "Great job! You know your phonetics well.";
+        } else if (percentage >= 50) {
+            finalMsgEl.textContent = "Not bad, but there's room for improvement.";
+        } else {
+            finalMsgEl.textContent = "Keep practicing! The phonetic alphabet is tricky.";
+        }
+    }
+
+    // Allow pressing "Enter" to submit
+    inputField.addEventListener("keypress", function(event) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            checkAnswer();
+        }
+    });
+</script>
+
+</body>
+</html>
